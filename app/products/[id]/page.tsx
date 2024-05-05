@@ -35,7 +35,6 @@ const Page = () => {
   const [lastUpdated, setLastUpdated] = useState(Date.now());
 
   const [quantity, setQuantity] = useState(1);
-  const [paymentUrl, setPaymentUrl] = useState("");
 
   const increment = () => {
     setQuantity((prevQuantity) => prevQuantity + 1);
@@ -82,7 +81,7 @@ const Page = () => {
       const updatedProduct = await updateProductById(
         productId,
         updatedData,
-        session?.accessToken || ""
+        session?.user.accessToken || ""
       );
 
       if (updatedProduct) {
@@ -106,7 +105,7 @@ const Page = () => {
 
   const handleDeleteProduct = async () => {
     try {
-      await deleteProductById(productId, session?.accessToken || "");
+      await deleteProductById(productId, session?.user.accessToken || "");
       toast({
         title: "Product deleted.",
         description: "Your product has been successfully deleted.",
@@ -122,22 +121,20 @@ const Page = () => {
 
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to make a purchase",
-        status: "warning",
-        duration: 5000,
-        isClosable: true,
-      });
+      localStorage.setItem("prevPage", window.location.pathname);
+
+      const productId = product?.id ?? "";
+      const productQuantity = quantity; // Assuming 'quantity' is defined in this scope
+      router.push(`/buy-product/${productId}?quantity=${productQuantity}`);
       return;
     }
     try {
       const paymentPageUrl = await getPaymentPage(
         product?.id ?? "",
         quantity,
-        session?.accessToken || ""
+        session?.user.accessToken || ""
       );
-      setPaymentUrl(paymentPageUrl);
+
       router.push(paymentPageUrl);
     } catch (error) {
       console.error("Error initiating payment:", error);
@@ -229,14 +226,14 @@ const Page = () => {
                 </h1>
                 <p className="text-xl text-gray-700">{product.price} TL</p>
                 <p className="text-gray-600">{product.description}</p>
-                <p className="text-sm text-gray-500 flex flex-row gap-1 items-center">
+                <div className="text-sm text-gray-500 flex flex-row gap-1 items-center">
                   Sold by:
-                  <Link href={`/seller/${product.seller_id}`}>
+                  <Link href={`/seller/${product?.seller_id}`}>
                     <p className="text-orange-700 hover:text-orange-600 font-bold ">
                       {product.seller_name}
                     </p>
                   </Link>
-                </p>
+                </div>
                 <div className="flex space-x-4">
                   <button
                     disabled
@@ -286,13 +283,6 @@ const Page = () => {
               </>
             )}
           </div>
-          {/* {paymentUrl && (
-            <iframe
-              src={paymentUrl}
-              className="fullscreen-iframe"
-              allowFullScreen
-            ></iframe>
-          )} */}
         </div>
       )}
     </div>

@@ -38,7 +38,7 @@ const Navbar = () => {
             )}
             {NavLinks.map((link) => (
               <li key={link.key}>
-                <Link href={link.href}>
+                <Link href={link?.href}>
                   <p className="text-gray-600 hover:text-orange-600 transition duration-150 ease-in-out">
                     {link.text}
                   </p>
@@ -47,7 +47,7 @@ const Navbar = () => {
             ))}
 
             {session && session.user ? (
-              <Link href={`/seller/${session.user.id}`}>
+              <Link href={`/seller/${session?.user?.id}`}>
                 <p className="text-gray-600 hover:text-orange-600 transition duration-150 ease-in-out">
                   My Products
                 </p>

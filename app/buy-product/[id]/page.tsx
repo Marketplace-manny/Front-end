@@ -1,39 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getPaymentPage, signUp } from "@/actions/actions";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 import { useToast } from "@chakra-ui/react";
-import { useRouter } from "next/navigation";
-import { signUp } from "@/actions/actions";
+import email from "next-auth/providers/email";
 
-interface SignUpProps {
-  onSignIn: () => void;
-}
-
-const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
+export default function CheckoutSignupPage({}) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const quantity = Number(searchParams.get("quantity")) || 1;
+  const pathSegments = pathname.split("/");
+  const productId = pathSegments[pathSegments.length - 1];
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [phone_number, setPhone_number] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const toast = useToast();
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
     setError("");
 
     try {
-      const registrationResponse = await signUp({
+      const res = await signUp({
         email,
-        password,
         name,
         surname,
         phone_number,
       });
+
+      const token = res;
 
       toast({
         title: "Account created successfully",
@@ -45,55 +45,48 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
         position: "top",
       });
 
-      const token = registrationResponse;
-
-      router.push("/");
-
       const signInResult = await signIn("credentials", {
         token,
         redirect: false,
       });
 
+      console.log("signInResult", signInResult);
+
       if (signInResult?.error) {
         setError(signInResult.error);
       } else {
-        onSignIn();
+        console.log("token", token);
+        await initiatePayment(token ?? "", quantity);
       }
     } catch (error: any) {
       setError(error.message);
-      setLoading(false);
+    }
+  };
+
+  const initiatePayment = async (accessToken: string, quantity: number) => {
+    try {
+      const paymentPageUrl = await getPaymentPage(
+        productId,
+        quantity,
+        accessToken
+      );
+      router.push(paymentPageUrl);
+    } catch (error) {
+      console.error("Error initiating payment:", error);
     }
   };
 
   return (
-    <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 shadow-lg rounded-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <button
-              onClick={onSignIn}
-              className="font-medium text-orange-700 hover:text-orange-700 transition duration-150 ease-in-out"
-            >
-              Sign in
-            </button>
-          </p>
-        </div>
-        {error && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-            role="alert"
-          >
-            <strong className="font-bold">Oops! </strong>
-            <span className="block sm:inline">{error}</span>
+    <div className="flex flex-col items-center justify-center p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 w-full">
+        <div className="container mt-10 flex w-full ">
+          <div className="w-1/2">
+            <h2 className="text-xl font-bold">Checkout Product</h2>
+            <p>Product Name: {}</p>
           </div>
-        )}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
+          <div className="w-1/2 p-5 shadow-lg">
+            <h2 className="text-lg font-semibold mb-4">Your Information</h2>
+            <div className="rounded-md shadow-sm -space-y-px">
               <label htmlFor="first-name" className="sr-only">
                 First Name
               </label>
@@ -135,20 +128,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+
             <div>
               <label htmlFor="phone-number" className="sr-only">
                 Phone Number
@@ -163,17 +143,13 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
                 onChange={(e) => setPhone_number(e.target.value)}
               />
             </div>
+            <button type="submit" className="btn btn-primary w-full">
+              Sign Up & Checkout
+            </button>
           </div>
-          <button
-            type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-700 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          >
-            Sign Up
-          </button>
-        </form>
-      </div>
+        </div>
+        {/* Submit button */}
+      </form>
     </div>
   );
-};
-
-export default SignUp;
+}

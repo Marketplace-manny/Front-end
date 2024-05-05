@@ -40,7 +40,7 @@ const ProductForm = ({ type }: Props) => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
+            Authorization: `Bearer ${session?.user.accessToken}`,
           },
           body: JSON.stringify({
             name: form.name,
@@ -54,7 +54,6 @@ const ProductForm = ({ type }: Props) => {
       const result = await response.json();
 
       if (response.ok) {
-        console.log("Product created successfully:", result);
         toast({
           title: "Product created successfully!",
           description: "Your product has been added to the list.",

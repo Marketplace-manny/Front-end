@@ -45,8 +45,6 @@ const SellerPage = () => {
     setViewMode(viewMode === "grid" ? "list" : "grid");
   };
 
-  console.log(sellerName);
-
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-6">
       <div className="flex justify-between items-center mb-6">

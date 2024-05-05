@@ -2,8 +2,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const Page = () => {
+  const { data: session } = useSession();
+
   const pathname = usePathname();
   const pathSegments = pathname.split("/");
   const productId = pathSegments[pathSegments.length - 1];
@@ -27,11 +30,19 @@ const Page = () => {
           Continue Shopping
         </p>
       </Link>
-      <Link href={`/order/${productId}`}>
-        <p className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
-          View Your Order
-        </p>
-      </Link>
+      {session ? (
+        <Link href={`/order/${productId}`}>
+          <p className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+            View Your Order
+          </p>
+        </Link>
+      ) : (
+        <Link href="/login">
+          <p className="mt-4 px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+            Sign in to View Your Order
+          </p>
+        </Link>
+      )}
     </div>
   );
 };

@@ -12,40 +12,44 @@ const SignIn = ({ title }: { title?: string }) => {
   const [error, setError] = useState("");
   const toast = useToast();
   const router = useRouter();
+  const [emailSent, setEmailSent] = useState<Boolean>(false);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const email = event.currentTarget.email.value;
-    const password = event.currentTarget.password.value;
 
     setError("");
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    if (result?.error) {
-      console.error("Login error:", result.error);
-      setError(result.error);
-    } else {
-      console.log("Login successful, checking session...");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Sending magic link failed");
+      }
+
       toast({
-        title: "Login successful",
-        description: "You have been signed in successfully. Redirecting...",
+        title: "Magic link sent",
+        description: "Check your email for the magic link to sign in.",
         status: "success",
-        duration: 1000,
+        duration: 5000,
         isClosable: true,
         position: "top",
       });
-      router.push("/");
+
+      setEmailSent(true);
+    } catch (error) {
+      console.error("Magic link sending error:", error);
+      setError("An error occurred while sending the magic link.");
     }
   };
 
   const handleSignOut = async () => {
     const result = await signOut({ redirect: false, callbackUrl: "/" });
-    console.log("Signed out", result);
   };
 
   const handleSignIn = () => {
@@ -54,6 +58,22 @@ const SignIn = ({ title }: { title?: string }) => {
 
   if (isSignUp) {
     return <SignUp onSignIn={handleSignIn} />;
+  }
+
+  if (emailSent) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] px-4 py-6  sm:px-6 lg:px-8">
+        <div className="max-w-md w-full text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900">
+            Check your email
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            We have sent a magic link to your email. Click on the link to sign
+            in.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (session) {
@@ -113,7 +133,7 @@ const SignIn = ({ title }: { title?: string }) => {
                   placeholder="Your email"
                 />
               </div>
-              <div>
+              {/* <div>
                 <label htmlFor="password" className="sr-only">
                   Password
                 </label>
@@ -125,7 +145,7 @@ const SignIn = ({ title }: { title?: string }) => {
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
                   placeholder="Password"
                 />
-              </div>
+              </div> */}
             </div>
 
             <div>

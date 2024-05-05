@@ -1,5 +1,31 @@
 import { Product } from "@/types/common.types";
 
+export async function signUp(userData: {
+  email: string;
+  password?: string;
+  name: string;
+  surname: string;
+  phone_number: string;
+}): Promise<string> {
+  const response = await fetch(
+    process.env.NEXT_PUBLIC_API_URL + "/auth/signup",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData),
+    }
+  );
+
+  if (!response.ok) {
+    const result = await response.json();
+    throw new Error(result.message || "Failed to sign up.");
+  }
+
+  const result = await response.json();
+
+  return result.token;
+}
+
 export async function fetchProducts(
   page: number = 1,
   perPage: number = 10
@@ -117,4 +143,38 @@ export async function getPaymentPage(
 
   const data = await response.json();
   return data.paymentPage;
+}
+
+// action.ts
+export async function setPassword(
+  newPassword: string,
+  token: string
+): Promise<void> {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/auth/set-password`;
+  const headers = new Headers();
+  headers.append("Authorization", `Bearer ${token}`);
+  headers.append("Content-Type", "application/json");
+
+  const body = JSON.stringify({
+    password: newPassword,
+  });
+
+  const requestOptions = {
+    method: "PUT",
+    headers: headers,
+    body: body,
+  };
+
+  try {
+    const response = await fetch(url, requestOptions);
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      throw new Error(errorResponse.message || "Failed to set new password");
+    }
+    const data = await response.json(); // Assuming the backend sends confirmation data back; adjust as necessary
+    return data;
+  } catch (error) {
+    console.error("Error setting password:", error);
+    throw error; // Re-throw to handle it in the component
+  }
 }

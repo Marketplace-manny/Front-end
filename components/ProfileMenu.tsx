@@ -65,7 +65,7 @@ const ProfileMenu = () => {
             <div className="flex flex-col gap-3 pt-10 items-start w-full">
               <Menu.Item>
                 <Link
-                  href={`/add-product`}
+                  href="/add-product"
                   className="text-sm font-semibold text-green-800"
                 >
                   Start Selling

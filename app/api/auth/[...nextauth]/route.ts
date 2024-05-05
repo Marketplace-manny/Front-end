@@ -1,70 +1,76 @@
-import NextAuth, {
-  AuthOptions,
-  NextAuthOptions,
-  SessionStrategy,
-} from "next-auth";
+import NextAuth, { AuthOptions, NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import jwt, { JwtPayload } from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+if (!JWT_SECRET) {
+  throw new Error(
+    "JWT_SECRET is not defined. Please define it in your environment variables."
+  );
+}
 
 export const authOptions: NextAuthOptions = {
   session: {
-    strategy: "jwt" as SessionStrategy,
+    strategy: "jwt",
   },
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: {
-          label: "Email",
+        token: {
+          label: "Token",
           type: "text",
-          placeholder: "email@example.com",
+          placeholder: "Enter your token here",
         },
-        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(credentials),
+        const token = credentials?.token;
+        try {
+          if (token) {
+            // Verify the token and assert the type
+            const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+
+            // Check if decoded is an object and has the property 'id'
+            if (typeof decoded === "object" && decoded.hasOwnProperty("id")) {
+              return {
+                id: decoded.id, // TypeScript now knows `decoded.id` is accessible
+                name: decoded.name,
+                surname: decoded.surname,
+                email: decoded.email,
+                token: token, // Storing the original token if needed elsewhere
+              };
+            }
           }
-        );
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Authentication failed");
-
-        console.log("Data received in authorize:", data);
-
-        return {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          surname: data.user.surname,
-          accessToken: data.token,
-        };
+        } catch (error) {
+          throw new Error("Token validation failed: " + error);
+        }
+        return null;
       },
     }),
   ],
-
   callbacks: {
-    jwt: async ({ token, user }) => {
+    jwt: async ({ token, user }: { token: any; user: any }) => {
+      // Assign new claims to the token only if `user` exists (on sign in)
       if (user) {
+        token.accessToken = user.token;
         token.id = user.id;
         token.name = user.name;
-        token.email = user.email;
         token.surname = user.surname;
-        token.accessToken = user.accessToken;
+        token.email = user.email;
       }
       return token;
     },
     session: async ({ session, token }) => {
+      // Add these fields to the session object
       session.user = {
+        ...session.user, // Preserve existing session properties
         id: token.id,
         name: token.name,
-        email: token.email,
         surname: token.surname,
+        email: token.email,
+        accessToken: token.accessToken, // You might also want to access the token later
       };
-      session.accessToken = token.accessToken;
-
       return session;
     },
   },
