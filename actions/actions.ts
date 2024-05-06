@@ -1,12 +1,7 @@
-import { Product } from "@/types/common.types";
+import { SignUpData } from "@/common/types/actions.types";
+import { Product } from "@/common/types/common.types";
 
-export async function signUp(userData: {
-  email: string;
-  password?: string;
-  name: string;
-  surname: string;
-  phone_number: string;
-}): Promise<string> {
+export async function signUp(userData: SignUpData): Promise<string> {
   const response = await fetch(
     process.env.NEXT_PUBLIC_API_URL + "/auth/signup",
     {
@@ -145,7 +140,6 @@ export async function getPaymentPage(
   return data.paymentPage;
 }
 
-// action.ts
 export async function setPassword(
   newPassword: string,
   token: string
@@ -171,10 +165,10 @@ export async function setPassword(
       const errorResponse = await response.json();
       throw new Error(errorResponse.message || "Failed to set new password");
     }
-    const data = await response.json(); // Assuming the backend sends confirmation data back; adjust as necessary
+    const data = await response.json();
     return data;
   } catch (error) {
     console.error("Error setting password:", error);
-    throw error; // Re-throw to handle it in the component
+    throw error;
   }
 }

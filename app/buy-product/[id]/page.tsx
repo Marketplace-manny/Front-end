@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPaymentPage, signUp } from "@/actions/actions";
+import { getPaymentPage, signUp, fetchProductById } from "@/actions/actions";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { useToast } from "@chakra-ui/react";
-import email from "next-auth/providers/email";
+import CommonInput from "@/common/components/CommonInput";
+import Button from "@/common/components/Button";
+import { Product } from "@/common/types/common.types";
+import Image from "next/image";
 
 export default function CheckoutSignupPage({}) {
+  const [product, setProduct] = useState<Product | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const quantity = Number(searchParams.get("quantity")) || 1;
@@ -20,6 +24,21 @@ export default function CheckoutSignupPage({}) {
   const [error, setError] = useState("");
   const toast = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    try {
+      const productData = await fetchProductById(productId);
+      setProduct(productData);
+    } catch (error) {
+      console.error("Error fetching product:", error);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,79 +96,81 @@ export default function CheckoutSignupPage({}) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4">
-      <form onSubmit={handleSubmit} className="space-y-4 w-full">
-        <div className="container mt-10 flex w-full ">
-          <div className="w-1/2">
-            <h2 className="text-xl font-bold">Checkout Product</h2>
-            <p>Product Name: {}</p>
-          </div>
-          <div className="w-1/2 p-5 shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Your Information</h2>
-            <div className="rounded-md shadow-sm -space-y-px">
-              <label htmlFor="first-name" className="sr-only">
-                First Name
-              </label>
-              <input
-                id="first-name"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="First Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="last-name" className="sr-only">
-                Last Name
-              </label>
-              <input
-                id="last-name"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Last Name"
-                value={surname}
-                onChange={(e) => setSurname(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="phone-number" className="sr-only">
-                Phone Number
-              </label>
-              <input
-                id="phone-number"
-                type="tel"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Phone Number (123-456-7890)"
-                value={phone_number}
-                onChange={(e) => setPhone_number(e.target.value)}
-              />
-            </div>
-            <button type="submit" className="btn btn-primary w-full">
-              Sign Up & Checkout
-            </button>
-          </div>
+    <div className="container mx-auto px-4 lg:px-8 py-8">
+      <div className="flex flex-col lg:flex-row justify-center items-start">
+        <div className="lg:w-1/2 lg:mr-8 ">
+          {product ? (
+            <>
+              <div className="mb-6">
+                <Image
+                  src={"/placeholder-image.png"}
+                  alt="Product Image"
+                  width={300}
+                  height={200}
+                  className="rounded-lg"
+                />
+              </div>
+              <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
+              <p className="text-xl font-semibold">Price: ${product.price}</p>
+              <p className="text-xl font-semibold">Quantity: {quantity}</p>{" "}
+              <p className="text-gray-700 text-lg mb-4">
+                {product.description}
+              </p>
+            </>
+          ) : (
+            <p className="text-lg">Loading product details...</p>
+          )}
         </div>
-        {/* Submit button */}
-      </form>
+
+        <div className="lg:w-1/2">
+          <h2 className="text-3xl font-bold mb-8">Sign Up to Checkout</h2>
+          <form onSubmit={handleSubmit} className="space-y-2 w-full">
+            <CommonInput
+              id="first-name"
+              type="text"
+              placeholder="First Name"
+              value={name}
+              onChange={(value) => setName(value)}
+              required
+              className="rounded-xl"
+            />
+            <CommonInput
+              id="last-name"
+              type="text"
+              placeholder="Last Name"
+              value={surname}
+              onChange={(value) => setSurname(value)}
+              required
+              className="rounded-xl"
+            />
+            <CommonInput
+              id="email"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(value) => setEmail(value)}
+              required
+              className="rounded-xl"
+            />
+            <CommonInput
+              id="phone-number"
+              type="tel"
+              placeholder="Phone Number (123-456-7890)"
+              value={phone_number}
+              onChange={(value) => setPhone_number(value)}
+              required
+              isPhoneNumber
+              className="rounded-xl mb-4"
+            />
+            <Button
+              type="submit"
+              title="Sign Up & Checkout"
+              classNames=" w-full"
+            />
+          </form>
+          {error && <p className="text-red-500 mt-4">{error}</p>}
+        </div>
+      </div>
     </div>
   );
 }

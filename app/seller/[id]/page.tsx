@@ -2,47 +2,42 @@
 import React, { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { fetchProductsBySellerId } from "@/actions/actions";
-import { Product } from "@/types/common.types";
-import ProductList from "@/components/ProductList/ProductsList";
-import { IoGridOutline } from "react-icons/io5";
-import { FaList } from "react-icons/fa";
-import { BsPersonFill } from "react-icons/bs";
+import { Product } from "@/common/types/common.types";
+import ProductList from "@/components/Products/ProductList";
 import ProductCardSkeleton from "@/components/Skeletons/ProductCardSkeleton";
 import { SkeletonCircle, SkeletonText } from "@chakra-ui/react";
+import { IoGridOutline, IoListOutline } from "react-icons/io5";
 
 const SellerPage = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [viewMode, setViewMode] = useState("grid");
-  const pathname = usePathname();
-  const pathSegments = pathname.split("/");
-  const productId = pathSegments[pathSegments.length - 1];
-  const [sellerName, setSellerName] = useState("");
-  const [sellerImage, setSellerImage] = useState("/seller_static.png");
   const [isLoading, setLoading] = useState(true);
+  const [sellerDetails, setSellerDetails] = useState({
+    name: "",
+    image: "/seller_static.png",
+  });
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const pathname = usePathname();
+  const sellerId = pathname.split("/").pop();
 
   useEffect(() => {
-    setLoading(true);
-    if (productId) {
-      fetchProductsBySellerId(productId as string)
-        .then((products) => {
-          setProducts(products);
-          if (products.length > 0) {
-            setSellerName(products[0].seller_name);
-            setSellerImage(sellerImage);
+    if (sellerId) {
+      fetchProductsBySellerId(sellerId)
+        .then((fetchedProducts) => {
+          setProducts(fetchedProducts);
+          if (fetchedProducts.length > 0) {
+            setSellerDetails({
+              name: fetchedProducts[0].seller_name,
+              image: "/placeholder-image.png",
+            });
           }
-          setLoading(false);
         })
-        .catch((error) => {
-          console.error(error);
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
+        .catch(console.error)
+        .finally(() => setLoading(false));
     }
-  }, [productId]);
+  }, [sellerId]);
 
   const toggleViewMode = () => {
-    setViewMode(viewMode === "grid" ? "list" : "grid");
+    setViewMode((prevMode) => (prevMode === "grid" ? "list" : "grid"));
   };
 
   return (
@@ -50,38 +45,32 @@ const SellerPage = () => {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           {isLoading ? (
-            <SkeletonCircle
-              height="80px"
-              width="80px"
-              startColor="gray.100"
-              endColor="gray.300"
-            />
+            <>
+              <SkeletonCircle size="20" />
+              <SkeletonText mt="4" noOfLines={2} spacing="4" />
+            </>
           ) : (
-            <img
-              src={sellerImage}
-              alt="Seller"
-              className="w-20 h-20 rounded-full object-cover"
-            />
+            <>
+              <img
+                src={sellerDetails.image}
+                alt="Seller"
+                className="w-20 h-20 rounded-full object-cover"
+              />
+              <h1 className="text-3xl font-bold">
+                {sellerDetails.name}'s Products
+              </h1>
+            </>
           )}
-          {isLoading ? (
-            <SkeletonText
-              height="40px"
-              width="300px"
-              startColor="gray.100"
-              endColor="gray.300"
-            />
-          ) : (
-            <h1 className="text-3xl font-bold">{sellerName}'s Products</h1>
-          )}{" "}
         </div>
         <button
-          className={`p-3 rounded-full font-medium bg-black text-white hover:bg-slate-800 sm:flex items-center gap-2  hidden`}
           onClick={toggleViewMode}
+          className="p-3 rounded-full font-medium bg-black text-white hover:bg-slate-800 flex items-center gap-2"
+          aria-label={`Switch to ${viewMode === "grid" ? "list" : "grid"} view`}
         >
           {viewMode === "grid" ? (
             <IoGridOutline size="1.5em" />
           ) : (
-            <FaList size="1.5em" />
+            <IoListOutline size="1.5em" />
           )}
           <span>{viewMode === "grid" ? "List View" : "Grid View"}</span>
         </button>
@@ -89,25 +78,21 @@ const SellerPage = () => {
       <section
         className={`${
           viewMode === "grid"
-            ? "grid xl:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1  gap-6"
+            ? "grid xl:grid-cols-4 md:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-6"
             : "flex flex-col gap-6"
         }`}
       >
         {isLoading ? (
-          Array(8)
-            .fill(0)
-            .map((_, index) => <ProductCardSkeleton key={index} />)
+          Array.from({ length: 8 }, (_, index) => (
+            <ProductCardSkeleton key={index} />
+          ))
         ) : products.length > 0 ? (
           products.map((product) => (
             <ProductList
               key={product.id}
-              id={product.id}
-              name={product.name}
-              price={product.price}
-              description={product.description}
-              sellerName={product.seller_name}
+              {...product}
               imageUrl={"/placeholder-image.png"}
-              view={viewMode as "" | "grid" | "list" | undefined}
+              view={viewMode}
             />
           ))
         ) : (

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import FormField from "./FormField";
-import Button from "./Button";
+import Button from "../common/components/Button";
 import { Spinner } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
