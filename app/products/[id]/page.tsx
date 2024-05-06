@@ -9,10 +9,11 @@ import {
   getPaymentPage,
   updateProductById,
 } from "@/actions/actions";
-import { Product } from "@/types/common.types";
+import { Product } from "@/common/types/common.types";
 import { useSession } from "next-auth/react";
 import FormField from "@/components/FormField";
 import { useToast } from "@chakra-ui/react";
+import QuantitySelector from "@/common/components/QuantitySelector";
 
 const Page = () => {
   const { data: session, status } = useSession();
@@ -244,24 +245,11 @@ const Page = () => {
                   </button>
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center space-x-2 bg-white shadow-sm p-2 rounded-md">
-                      <button
-                        onClick={decrement}
-                        className="px-4 py-2 text-lg font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                      >
-                        -
-                      </button>
-                      <span
-                        className="text-lg font-semibold text-gray-900 w-12 text-center"
-                        style={{ minWidth: "50px" }}
-                      >
-                        {quantity}
-                      </span>
-                      <button
-                        onClick={increment}
-                        className="px-4 py-2 text-lg font-semibold text-gray-800 bg-gray-200 hover:bg-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                      >
-                        +
-                      </button>
+                      <QuantitySelector
+                        quantity={quantity}
+                        onIncrement={increment}
+                        onDecrement={decrement}
+                      />
                     </div>
                     <button
                       onClick={handleBuyNow}

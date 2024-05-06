@@ -1,12 +1,4 @@
-type Props = {
-  title: string;
-  state: string;
-  placeholder: string;
-  isTextArea?: boolean;
-  isNumber?: boolean;
-  min?: number;
-  setState: (value: string) => void;
-};
+import { FormFieldProps } from "@/common/types/common.types";
 
 const FormField = ({
   title,
@@ -16,27 +8,33 @@ const FormField = ({
   isNumber,
   min,
   setState,
-}: Props) => {
+}: FormFieldProps) => {
+  const inputId = `input-${title.replace(/\s+/g, "-").toLowerCase()}`; // Creates a unique ID based on the title
+
   return (
     <div className="flex flex-col gap-2 w-full">
-      <label className="text-gray-700 font-medium">{title}</label>
+      <label htmlFor={inputId} className="text-gray-700 font-medium">
+        {title}
+      </label>
       {isTextArea ? (
         <textarea
+          id={inputId}
           placeholder={placeholder}
           value={state}
           onChange={(e) => setState(e.target.value)}
           required
-          className="w-full outline-0 bg-light-white-100 rounded-xl p-4"
+          className="w-full outline-none bg-gray-50 rounded-xl p-4 text-gray-700"
         />
       ) : (
         <input
+          id={inputId}
           type={isNumber ? "number" : "text"}
           placeholder={placeholder}
           value={state}
           onChange={(e) => setState(e.target.value)}
           required
-          className="w-full outline-0 bg-light-white-100 rounded-xl p-4"
-          min={isNumber && min ? min : undefined}
+          className="w-full outline-none bg-gray-50 rounded-xl p-4 text-gray-700"
+          {...(isNumber && min !== undefined && { min })}
         />
       )}
     </div>

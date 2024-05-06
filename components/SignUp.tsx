@@ -5,6 +5,8 @@ import { signIn } from "next-auth/react";
 import { useToast } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import { signUp } from "@/actions/actions";
+import CommonInput from "@/common/components/CommonInput";
+import Button from "@/common/components/Button";
 
 interface SignUpProps {
   onSignIn: () => void;
@@ -25,6 +27,11 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
     event.preventDefault();
     setLoading(true);
     setError("");
+    console.log("email", email);
+    console.log("password ", password);
+    console.log("name", name);
+    console.log("surname", surname);
+    console.log("phone_number", phone_number);
 
     try {
       const registrationResponse = await signUp({
@@ -68,20 +75,18 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
   return (
     <div className="h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 shadow-lg rounded-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <button
-              onClick={onSignIn}
-              className="font-medium text-orange-700 hover:text-orange-700 transition duration-150 ease-in-out"
-            >
-              Sign in
-            </button>
-          </p>
-        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Already have an account?{" "}
+          <button
+            onClick={onSignIn}
+            className="font-medium text-orange-700 hover:text-orange-700 transition duration-150 ease-in-out"
+          >
+            Sign in
+          </button>
+        </p>
         {error && (
           <div
             className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
@@ -92,84 +97,59 @@ const SignUp: React.FC<SignUpProps> = ({ onSignIn }) => {
           </div>
         )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="first-name" className="sr-only">
-                First Name
-              </label>
-              <input
-                id="first-name"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="First Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="last-name" className="sr-only">
-                Last Name
-              </label>
-              <input
-                id="last-name"
-                type="text"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Last Name"
-                value={surname}
-                onChange={(e) => setSurname(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="phone-number" className="sr-only">
-                Phone Number
-              </label>
-              <input
-                id="phone-number"
-                type="tel"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                placeholder="Phone Number (123-456-7890)"
-                value={phone_number}
-                onChange={(e) => setPhone_number(e.target.value)}
-              />
-            </div>
-          </div>
-          <button
+          <CommonInput
+            id="first-name"
+            type="text"
+            placeholder="First Name"
+            value={name}
+            onChange={setName}
+            required
+            autoComplete="given-name"
+          />
+          <CommonInput
+            id="last-name"
+            type="text"
+            placeholder="Last Name"
+            value={surname}
+            onChange={setSurname}
+            required
+            autoComplete="family-name"
+          />
+          <CommonInput
+            id="email"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={setEmail}
+            required
+            autoComplete="email"
+          />
+          <CommonInput
+            id="password"
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={setPassword}
+            required
+            autoComplete="new-password"
+          />
+          <CommonInput
+            id="phone-number"
+            type="tel"
+            placeholder="Phone Number"
+            value={phone_number}
+            onChange={setPhone_number}
+            required
+            autoComplete="tel"
+            isPhoneNumber={true}
+          />
+
+          <Button
+            title="Sign Up"
+            isSubmitting={loading}
+            classNames="w-full bg-orange-900 hover:bg-orange-700 "
             type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-700 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-          >
-            Sign Up
-          </button>
+          />
         </form>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { signIn } from "next-auth/react";
-import Button from "./Button";
+import Button from "../common/components/Button";
 
 const AuthProviders = () => {
   const handleSignInClick = () => {
